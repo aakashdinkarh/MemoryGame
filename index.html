@@ -48,18 +48,47 @@
     <meta name="twitter:image" content="https://aakashdinkarh.github.io/static_assets/images/portfolio/original-images/meta-og-image.jpeg" />
     
     <title>Memory Game - Aakash Dinkar</title>
-    <link rel="stylesheet" href="style.css" />
-    <script src="script.js"></script>
+    <link rel="stylesheet" href="./style.css" />
+    <script>
+      const localStorageKey = '--saved--isDarkThemeEnabled';
+      function saveIsDarkThemeEnabledToLocalStorage(isDarkThemeEnabled) {
+        localStorage.setItem(localStorageKey, JSON.stringify(isDarkThemeEnabled));
+      }
+      function getIsDarkThemeEnabledFromLocalStorage() {
+        let isDarkThemeEnabled = true;
+        try {
+          const storedKeyResult = localStorage.getItem(localStorageKey);
+          isDarkThemeEnabled =
+            storedKeyResult != null ? JSON.parse(storedKeyResult) : true;
+        } catch {
+          isDarkThemeEnabled = true;
+        }
+        return isDarkThemeEnabled;
+        saveIsDarkThemeEnabledToLocalStorage(isDarkThemeEnabled);
+      }
+    </script>
   </head>
   <body>
+    <script>
+			document.body.classList.add(getIsDarkThemeEnabledFromLocalStorage() ? 'dark-theme' : 'light-theme');
+		</script>
     <div class="container">
       <h1>Memory Game</h1>
-      <button class="success" onclick="start()">Start Game</button>
-      <br><br>
-      <div id="score"></div>
-
-      <div id="boardgame"></div>
+      <button id="restart-btn">Restart Game</button>
+      <!-- theme slider *** START *** -->
+      <div class="theme-slider-container">
+        <label class="theme-slider">
+          <input type="checkbox" checked />
+          <div class="round slider"></div>
+        </label>
+      </div>
+      <!-- theme slider *** END *** -->
+      <br>
+      <br>
+      <p id="moves">Moves: 0</p>
+      <div id="gameBoard"></div>
+      <p id="gameWonMsg"></p>
     </div>
-
+    <script src="./script.js"></script>
   </body>
 </html>

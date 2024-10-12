@@ -1,72 +1,140 @@
-const images = ['panda.jpg', 'cat.jpg', 'panda.jpg', 'cat.jpg', 'mickey.jpg', 'mickey.jpg'];
+(function () {
+	const images = ['panda.jpg', 'cat.jpg', 'panda.jpg', 'cat.jpg', 'mickey.jpg', 'mickey.jpg'];
+	const imagesPerRow = 3;
 
-function start() {
-  let moves = 0;
-  var points = document.createElement('p')
-  points.setAttribute('id', 'points');
-  points.innerHTML = 'points';
-  document.getElementById("score").append(points)
-  
-  let imagesCopy = [];
-  for(let i = 0; i < images.length; i++) {
-    imagesCopy.push(images[i]);
-  }
-  var row = document.createElement('div')
-  var n = images.length;
-  for(let i = 1; i <=n; i++){
-    var div = document.createElement('div');
-    div.setAttribute('class', 'imageDiv')
-    
-    let randomImg = imagesCopy.splice(Math.floor(Math.random() * imagesCopy.length), 1);
-    console.log(randomImg)
-  
-    var img = document.createElement('img')
-    img.setAttribute('src', randomImg)
-    img.setAttribute('class', 'hide')
+	let winMessageShown = false;
+	const __moves__ = document.getElementById('moves');
+	const __restartBtn__ = document.getElementById('restart-btn');
+	const __gameBoard__ = document.getElementById('gameBoard');
+	const __gameWonMsg__ = document.getElementById('gameWonMsg');
+	const __toggleSwitch__ = document.querySelector('.theme-slider input[type="checkbox"]');
+	const __slider__ = document.querySelector('.theme-slider .slider');
+	const __getMatchElements__ = () => document.getElementsByClassName('match');
+	const __getAllImageDiv__ = () => document.querySelectorAll('.imageDiv');
+	const __getShowingElements__ = () => document.getElementsByClassName('show');
 
-    div.appendChild(img)
-    row.appendChild(div)
+	function restartGame() {
+		__gameBoard__.innerHTML = '';
+		__gameWonMsg__.innerText = '';
+		winMessageShown = false;
 
-    if( i%3 == 0) {
-      document.getElementById('boardgame').appendChild(row);
-      row = document.createElement('div');
-    }
+		startGame();
+	}
 
-    div.addEventListener('click', function(event) {
-      moves++;
-      document.getElementById('points').innerHTML = moves;
-      
+	function startGame() {
+		let moves = 0;
+		renderMoves(moves);
 
-      var curr = event.currentTarget.children
-      var currImg = curr[0];
+		const shuffledImages = shuffleImages(images);
+		generateBoard(shuffledImages);
 
-      var currShowing = document.getElementsByClassName('show')
+		function updateScore() {
+			moves++;
+			renderMoves(moves);
+		}
 
-      let flag = 0;
-      if(currShowing.length >= 1) {
-        for(let j = 0; j < currShowing.length; j++) {
-          if(currShowing[j].src != currImg.src)
-          currShowing[j].classList.remove('show')
-          else {
-            currShowing[j].classList.add('match')
-            currImg.classList.add('match')
-            flag = 1;
-          }
-        }
-      }
-      if(flag == 0) {
-        currImg.classList.add('show');
-      }
+		__getAllImageDiv__().forEach((div) => {
+			div.addEventListener('click', function (event) {
+				handleCardClick(event, moves, updateScore);
+			});
+		});
+	}
 
-      if( document.getElementsByClassName('match').length == n ) {
-        let button = document.createElement('button')
-        button.setAttribute('class', 'warning')
+	function renderMoves(moves = 0) {
+		__moves__.innerText = `Moves: ${moves}`;
+	}
 
-        let node = document.createTextNode("You've won!! Moves = "+moves)
-        button.appendChild(node);
+	function shuffleImages(imagesArray) {
+		let copy = [...imagesArray];
+		let shuffled = [];
+		while (copy.length) {
+			let randomIndex = Math.floor(Math.random() * copy.length);
+			shuffled.push(copy.splice(randomIndex, 1)[0]);
+		}
+		return shuffled;
+	}
 
-        document.getElementById('score').appendChild(button)
-      }
-    });
-  }
-}
+	function generateBoard(images) {
+		const fragment = document.createDocumentFragment();
+		let row = document.createElement('div');
+
+		images.forEach((image, index) => {
+			const div = document.createElement('div');
+			div.setAttribute('class', 'imageDiv');
+
+			const img = document.createElement('img');
+			img.setAttribute('src', image);
+			img.setAttribute('class', 'hide');
+
+			div.appendChild(img);
+			row.appendChild(div);
+
+			if ((index + 1) % imagesPerRow === 0) {
+				fragment.appendChild(row);
+				row = document.createElement('div');
+			}
+		});
+
+		__gameBoard__.replaceChildren(fragment);
+	}
+
+	function handleCardClick(event, moves, updateScore) {
+		if (winMessageShown) return;
+
+		updateScore();
+		const clickedImage = event.currentTarget.children[0];
+		const showingImages = __getShowingElements__();
+
+		let matchFound = false;
+
+		if (showingImages.length >= 1) {
+			[...showingImages].forEach((showingImage) => {
+				if (showingImage.src !== clickedImage.src) {
+					showingImage.classList.remove('show');
+				} else {
+					showingImage.classList.add('match');
+					clickedImage.classList.add('match');
+					matchFound = true;
+				}
+			});
+		}
+
+		if (!matchFound) {
+			clickedImage.classList.add('show');
+		}
+
+		if (__getMatchElements__().length === images.length) {
+			displayWinMessage(moves);
+		}
+	}
+
+	function displayWinMessage(moves) {
+		winMessageShown = true;
+		__gameWonMsg__.innerText = `You've won!! Moves = ${moves}`;
+	}
+
+	document.addEventListener('DOMContentLoaded', () => {
+		document.body.style.cssText = `transition: background-color 0.3s, color 0.3s;`;
+		startGame();
+		__restartBtn__.onclick = restartGame;
+
+		/* theme slider logic --- START --- */
+		__toggleSwitch__.onchange = toggleTheme;
+		__toggleSwitch__.checked = document.body.className === 'dark-theme';
+		setTimeout(() => {
+			__slider__.classList.add('slider-transition-class');
+		}, 0);
+		/* theme slider logic --- END --- */
+
+		function toggleTheme(e) {
+			const isDarkThemeEnabled = e.target.checked;
+
+			if (isDarkThemeEnabled) {
+				document.body.className = 'dark-theme';
+			} else {
+				document.body.className = 'light-theme';
+			}
+			saveIsDarkThemeEnabledToLocalStorage(isDarkThemeEnabled);
+		};
+	});
+})();
