@@ -104,7 +104,7 @@
 		}
 
 		if (__getMatchElements__().length === images.length) {
-			displayWinMessage(moves);
+			displayWinMessage(moves + 1);
 		}
 	}
 
